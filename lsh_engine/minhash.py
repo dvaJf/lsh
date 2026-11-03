@@ -11,7 +11,6 @@ def get_shingles(text, k=2):
         shingles.add(words[i] + " " + words[i + 1])
     return shingles
 
-
 def jaccard_similarity(a, b):
     if not a or not b:
         return 0.0
