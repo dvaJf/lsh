@@ -1,3 +1,7 @@
+# Хостинг тут
+
+[3-pointers-team.online](3-pointers-team.online)
+
 # запуск
 1.
    ```bash
