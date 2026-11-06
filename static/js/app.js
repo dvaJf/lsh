@@ -1,6 +1,4 @@
 let appState = null;
-let presetsData = null;
-
 let minhashParams = { b: 16, r: 4, k_shingle: 2, threshold: 0.6 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,16 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadAll() {
     try {
-        const [stateRes, presetsRes] = await Promise.all([
-            fetch('/api/state').then(r => r.json()),
-            fetch('/api/presets').then(r => r.json())
-        ]);
+        const stateRes = await fetch('/api/state').then(r => r.json());
         appState = stateRes;
-        presetsData = presetsRes;
-
         minhashParams = stateRes.minhash.params;
 
-        renderPresets();
         updateDocCountBadge();
 
         const queryInput = document.getElementById('query-text');
@@ -31,42 +23,10 @@ async function loadAll() {
 }
 
 function updateDocCountBadge() {
-    const badge = document.getElementById('badge-dataset-info');
     const btnCount = document.getElementById('btn-doc-count');
-    if (appState && appState.minhash) {
-        const count = appState.minhash.doc_count;
-        if (badge) badge.textContent = `${count} документов`;
-        if (btnCount) btnCount.textContent = `${count}`;
+    if (appState && appState.minhash && btnCount) {
+        btnCount.textContent = `${appState.minhash.doc_count}`;
     }
-}
-
-function renderPresets() {
-    const container = document.getElementById('presets-container');
-    if (!container) return;
-    container.innerHTML = '';
-    const list = presetsData && presetsData.minhash ? presetsData.minhash : [];
-
-    list.forEach((p, idx) => {
-        const btn = document.createElement('button');
-        btn.className = 'btn-preset' + (idx === 0 ? ' active' : '');
-        btn.textContent = p.title;
-        btn.onclick = () => selectPreset(p, btn);
-        container.appendChild(btn);
-    });
-
-    if (list.length > 0) {
-        selectPreset(list[0], container.children[0]);
-    }
-}
-
-function selectPreset(preset, btnElem) {
-    document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
-    if (btnElem) btnElem.classList.add('active');
-
-    document.getElementById('query-text').value = preset.text;
-    document.getElementById('thresh-mh').value = preset.threshold;
-    document.getElementById('val-thresh-mh').textContent = preset.threshold.toFixed(2);
-    minhashParams.threshold = preset.threshold;
 }
 
 function onThreshChange(mode, val) {
@@ -193,22 +153,7 @@ function renderResults(data) {
     }
 }
 
-async function regenerateDataset() {
-    const count = 1000;
-    const res = await fetch('/api/generate_dataset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ count })
-    }).then(r => r.json());
-
-    if (res.status === 'ok') {
-        await loadAll();
-        runSearch();
-    }
-}
-
 let dbSearchTimer = null;
-let currentTopicFilter = 'all';
 
 async function openDatabaseModal() {
     const modal = document.getElementById('db-modal');
